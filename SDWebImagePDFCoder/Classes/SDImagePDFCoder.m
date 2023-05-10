@@ -179,7 +179,7 @@ static inline NSString *SDBase64DecodedString(NSString *base64String) {
     CGRect rect = CGPDFPageGetBoxRect(pageRef, box);
     CGAffineTransform transform = CGPDFPageGetDrawingTransform(pageRef, box, rect, 0, YES);
     
-    SDGraphicsBeginImageContextWithOptions(targetRect.size, NO, 0);
+    SDGraphicsBeginImageContextWithOptions(rect.size, NO, 0);
     CGContextRef context = SDGraphicsGetCurrentContext();
     
 #if SD_UIKIT || SD_WATCH
