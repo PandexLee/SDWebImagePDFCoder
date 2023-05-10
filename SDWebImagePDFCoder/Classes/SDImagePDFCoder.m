@@ -8,6 +8,7 @@
 #import "SDImagePDFCoder.h"
 #import "SDWebImagePDFCoderDefine.h"
 #import "objc/runtime.h"
+#import <PDFKit/PDFKit.h>
 
 #define SD_FOUR_CC(c1,c2,c3,c4) ((uint32_t)(((c4) << 24) | ((c3) << 16) | ((c2) << 8) | (c1)))
 
@@ -151,25 +152,48 @@ static inline NSString *SDBase64DecodedString(NSString *base64String) {
     image = [[NSImage alloc] initWithSize:imageRep.size];
     [image addRepresentation:imageRep];
 #else
-    CGDataProviderRef provider = CGDataProviderCreateWithCFData((__bridge CFDataRef)data);
-    if (!provider) {
-        return nil;
-    }
-    CGPDFDocumentRef document = CGPDFDocumentCreateWithProvider(provider);
-    CGDataProviderRelease(provider);
+    
+    PDFDocument *document = [[PDFDocument alloc]initWithData:data];
     if (!document) {
         return nil;
     }
-    
-    // `CGPDFDocumentGetPage` page number is 1-indexed.
-    CGPDFPageRef page = CGPDFDocumentGetPage(document, pageNumber + 1);
+    if (pageNumber >= document.pageCount) {
+        return nil;
+    }
+    PDFPage *page = [document pageAtIndex:pageNumber];
     if (!page) {
-        CGPDFDocumentRelease(document);
         return nil;
     }
     
-    image = ((UIImage *(*)(id,SEL,CGPDFPageRef))[UIImage.class methodForSelector:SDImageWithCGPDFPageSEL])(UIImage.class, SDImageWithCGPDFPageSEL, page);
-    CGPDFDocumentRelease(document);
+    CGPDFDocumentRef documentRef = document.documentRef;
+    if (!documentRef) {
+        return nil;
+    }
+    
+    CGPDFPageRef pageRef = page.pageRef;
+    if (!pageRef) {
+        return nil;
+    }
+
+    CGPDFBox box = kCGPDFMediaBox;
+    CGRect rect = CGPDFPageGetBoxRect(pageRef, box);
+    CGAffineTransform transform = CGPDFPageGetDrawingTransform(pageRef, box, rect, 0, YES);
+    
+    SDGraphicsBeginImageContextWithOptions(targetRect.size, NO, 0);
+    CGContextRef context = SDGraphicsGetCurrentContext();
+    
+#if SD_UIKIT || SD_WATCH
+    // Core Graphics coordinate system use the bottom-left, UIKit use the flipped one
+    CGContextTranslateCTM(context, 0, rect.size.height);
+    CGContextScaleCTM(context, 1, -1);
+#endif
+    
+    CGContextConcatCTM(context, transform);
+    [page drawWithBox:kPDFDisplayBoxMediaBox toContext:context];
+
+    image = SDGraphicsGetImageFromCurrentImageContext();
+    SDGraphicsEndImageContext();
+        
 #endif
     
     return image;
