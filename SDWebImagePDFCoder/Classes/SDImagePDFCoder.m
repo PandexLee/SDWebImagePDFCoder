@@ -195,7 +195,18 @@ static inline NSString *SDBase64DecodedString(NSString *base64String) {
     SDGraphicsEndImageContext();
         
 #endif
-    
+    // png to jpg
+    NSData * jpgData = UIImageJPEGRepresentation(image, 1.0);
+    if (jpgData) {
+        image = [UIImage imageWithData:jpgData];
+    } else {
+        NSData * pngData = UIImagePNGRepresentation(image);
+        if (pngData) {
+            jpgData = UIImageJPEGRepresentation([UIImage imageWithData:pngData], 1.0);
+            image = [UIImage imageWithData:jpgData];
+        }
+    }
+
     return image;
 }
 
