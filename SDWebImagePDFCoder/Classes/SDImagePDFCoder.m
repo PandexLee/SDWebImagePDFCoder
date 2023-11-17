@@ -120,7 +120,7 @@ static inline NSString *SDBase64DecodedString(NSString *base64String) {
     
     // Draw the PDF page using PDFContextToData
     NSMutableData *data = [NSMutableData data];
-    CGPDFBox box = kCGPDFMediaBox;
+    CGPDFBox box = kCGPDFCropBox;
     CGRect rect = CGPDFPageGetBoxRect(page, box);
     
     UIGraphicsBeginPDFContextToData(data, CGRectZero, nil);
@@ -175,7 +175,7 @@ static inline NSString *SDBase64DecodedString(NSString *base64String) {
         return nil;
     }
 
-    CGPDFBox box = kCGPDFMediaBox;
+    CGPDFBox box = kCGPDFCropBox;
     CGRect rect = CGPDFPageGetBoxRect(pageRef, box);
     CGAffineTransform transform = CGPDFPageGetDrawingTransform(pageRef, box, rect, 0, YES);
     
@@ -189,7 +189,7 @@ static inline NSString *SDBase64DecodedString(NSString *base64String) {
 #endif
     
     CGContextConcatCTM(context, transform);
-    [page drawWithBox:kPDFDisplayBoxMediaBox toContext:context];
+    [page drawWithBox:kPDFDisplayBoxCropBox toContext:context];
 
     image = SDGraphicsGetImageFromCurrentImageContext();
     SDGraphicsEndImageContext();
@@ -220,11 +220,11 @@ static inline NSString *SDBase64DecodedString(NSString *base64String) {
     CGDataConsumerRef pdfConsumer = CGDataConsumerCreateWithCFData((__bridge CFMutableDataRef)pdfData);
     
     CGSize imageSize = CGSizeMake(CGImageGetWidth(imageRef), CGImageGetHeight(imageRef));
-    CGRect mediaBox = CGRectMake(0, 0, imageSize.width, imageSize.height);
-    CGContextRef context = CGPDFContextCreate(pdfConsumer, &mediaBox, NULL);
+    CGRect cropBox = CGRectMake(0, 0, imageSize.width, imageSize.height);
+    CGContextRef context = CGPDFContextCreate(pdfConsumer, &cropBox, NULL);
     
-    CGContextBeginPage(context, &mediaBox);
-    CGContextDrawImage(context, mediaBox, imageRef);
+    CGContextBeginPage(context, &cropBox);
+    CGContextDrawImage(context, cropBox, imageRef);
     CGContextEndPage(context);
     
     return [pdfData copy];
