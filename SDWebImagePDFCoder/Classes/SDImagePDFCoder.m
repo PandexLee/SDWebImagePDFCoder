@@ -255,14 +255,18 @@ static inline NSString *SDBase64DecodedString(NSString *base64String) {
     }
     uint32_t magic4;
     [data getBytes:&magic4 length:4]; // 4 Bytes Magic Code for most file format.
-    switch (magic4) {
-        case SD_FOUR_CC('%', 'P', 'D', 'F'): { // %PDF
-            return YES;
-        }
-        default: {
-            return NO;
-        }
+    uint32_t ppdf = SD_FOUR_CC('%', 'P', 'D', 'F');
+    BOOL eq1 = ppdf == magic4;
+    if (eq1) {
+        return YES;
     }
+    
+    NSString *testString = [[NSString alloc] initWithData:[data subdataWithRange:NSMakeRange(0, 5)] encoding:NSASCIIStringEncoding];
+    BOOL eq2 = [testString isEqualToString:@" %PDF"];
+    if (eq2) {
+        return YES;
+    }
+    return NO;
 }
 
 @end
