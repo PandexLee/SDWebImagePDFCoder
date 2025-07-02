@@ -177,6 +177,10 @@ static inline NSString *SDBase64DecodedString(NSString *base64String) {
 
     CGPDFBox box = kCGPDFCropBox;
     CGRect rect = CGPDFPageGetBoxRect(pageRef, box);
+    // 适配 iOS 17, https://blog.csdn.net/qq_43441647/article/details/134034413
+    if (CGSizeEqualToSize(rect.size, CGSizeZero)) {
+        rect.size = CGSizeMake(1, 1);
+    }
     CGAffineTransform transform = CGPDFPageGetDrawingTransform(pageRef, box, rect, 0, YES);
     
     SDGraphicsBeginImageContextWithOptions(rect.size, NO, 0);
