@@ -265,8 +265,9 @@ static inline NSString *SDBase64DecodedString(NSString *base64String) {
         return YES;
     }
     
-    NSString *testString = [[NSString alloc] initWithData:[data subdataWithRange:NSMakeRange(0, 5)] encoding:NSASCIIStringEncoding];
-    BOOL eq2 = [testString isEqualToString:@" %PDF"];
+    NSString *prefixString = [[NSString alloc] initWithData:[data subdataWithRange:NSMakeRange(0, 20)] encoding:NSASCIIStringEncoding];
+    NSString *testString = [prefixString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    BOOL eq2 = [testString hasPrefix:@"%PDF"];
     if (eq2) {
         return YES;
     }
